@@ -29,25 +29,51 @@ Script.complete();
 // build the content of the widget
 async function createWidget() {
   widget.addSpacer(4);
-  const logoImg = await getImage("dm-logo.png");
 
-  widget.setPadding(10, 10, 10, 10);
+  widget.setPadding(5, 5, 5, 5);
   const titleFontSize = 12;
   const detailFontSize = 36;
 
   // Logo Stack
-  const logoStack = widget.addStack();
-  logoStack.addSpacer(86);
-  const logoImageStack = logoStack.addStack();
-  logoStack.layoutHorizontally();
-  logoImageStack.backgroundColor = new Color("#ffffff", 1.0);
-  logoImageStack.cornerRadius = 8;
-  const wimg = logoImageStack.addImage(logoImg);
-  wimg.imageSize = new Size(30, 30);
-  wimg.rightAlignImage();
-  widget.addSpacer();
+  // Shop state
+  let currentTime = new Date().toLocaleTimeString("de-DE", {
+    hour: "numeric",
+    minute: "numeric",
+  });
+  let currentDay = new Date().getDay();
+  let isOpen;
+  if (currentDay > 0) {
+    const todaysOpeningHour =
+      storeInfo.openingHours[currentDay - 1].timeRanges[0].opening;
+    const todaysClosingHour =
+      storeInfo.openingHours[currentDay - 1].timeRanges[0].closing;
+    const range = [todaysOpeningHour, todaysClosingHour];
+    isOpen = isInRange(currentTime, range);
+  } else {
+    isOpen = false;
+  }
+
+  const logoImg = await getImage("dm-logo.png");
+  let logoRow = widget.addStack();
+  logoRow.layoutHorizontally();
+  logoRow.addSpacer(2);
+
+  let shopStateText;
+  if (isOpen) {
+    shopStateText = logoRow.addText("Geöffnet");
+    shopStateText.textColor = new Color("#00CD66");
+  } else {
+    shopStateText = logoRow.addText("Geschlossen");
+    shopStateText.textColor = new Color("#E50000");
+  }
+  shopStateText.font = Font.mediumSystemFont(10);
+  logoRow.addSpacer(13);
+  const logoIconImg = logoRow.addImage(logoImg);
+  logoIconImg.imageSize = new Size(40, 40);
+  logoIconImg.rightAlignImage();
 
   // Paper Stack
+  // Paper icon
   const paperIcon = await getImage("toilet-paper.png");
   let paperRow = widget.addStack();
   paperRow.layoutHorizontally();
@@ -55,7 +81,7 @@ async function createWidget() {
   const paperIconImg = paperRow.addImage(paperIcon);
   paperIconImg.imageSize = new Size(24, 24);
   paperRow.addSpacer(13);
-
+  // Paper text
   let paperColumn = paperRow.addStack();
   paperColumn.layoutVertically();
 
@@ -106,33 +132,6 @@ async function createWidget() {
     storeInfo.address.zip + " " + storeInfo.address.city
   );
   zipCity.font = Font.regularSystemFont(11);
-
-  let currentTime = new Date().toLocaleTimeString("de-DE", {
-    hour: "numeric",
-    minute: "numeric",
-  });
-  let currentDay = new Date().getDay();
-  let isOpen;
-  if (currentDay > 0) {
-    const todaysOpeningHour =
-      storeInfo.openingHours[currentDay - 1].timeRanges[0].opening;
-    const todaysClosingHour =
-      storeInfo.openingHours[currentDay - 1].timeRanges[0].closing;
-    const range = [todaysOpeningHour, todaysClosingHour];
-    isOpen = isInRange(currentTime, range);
-  } else {
-    isOpen = false;
-  }
-
-  let shopStateText;
-  if (isOpen) {
-    shopStateText = addressRow.addText("Geöffnet");
-    shopStateText.textColor = new Color("#00CD66");
-  } else {
-    shopStateText = addressRow.addText("Geschlossen");
-    shopStateText.textColor = new Color("#E50000");
-  }
-  shopStateText.font = Font.mediumSystemFont(11);
 }
 
 // fetches the amount of flour
@@ -264,4 +263,3 @@ async function loadImage(imgUrl) {
 }
 
 // end of script
-
